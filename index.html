@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Congressional Outreach</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Congressional Outreach</h1>
+  </header>
+
+  <main id="panels">
+    <section id="committees" class="panel">
+      <div class="panel-header">
+        <h2>Committees</h2>
+        <button type="button" id="committee-clear" class="panel-clear hidden" aria-label="Clear committee selection">Clear <span class="panel-clear-x">X</span></button>
+      </div>
+      <div class="panel-filters">
+        <label><input type="radio" name="chamber" value="senate" checked> Senate</label>
+        <label><input type="radio" name="chamber" value="house"> House</label>
+        <label><input type="radio" name="chamber" value="both"> Both</label>
+        <span class="filter-count" id="committee-count"></span>
+      </div>
+      <div class="panel-search">
+        <input type="text" id="committee-search" placeholder="Search Committees">
+        <span class="search-icon">&#128269;</span>
+        <ul id="committee-search-results" class="search-results"></ul>
+      </div>
+      <div class="panel-content">
+        <!-- committee list goes here -->
+      </div>
+    </section>
+
+    <div class="resize-handle" data-resize="0"></div>
+
+    <section id="members" class="panel">
+      <h2>Legislators</h2>
+      <div class="panel-filters">
+        <label><input type="radio" name="party" value="all" checked> All</label>
+        <label><input type="radio" name="party" value="D"> D</label>
+        <label><input type="radio" name="party" value="R"> R</label>
+        <label><input type="radio" name="party" value="I"> I</label>
+        <span class="filter-count" id="member-count"></span>
+      </div>
+      <div class="panel-search">
+        <input type="text" id="member-search" placeholder="Search Members">
+        <span class="search-icon">&#128269;</span>
+        <ul id="member-search-results" class="search-results"></ul>
+      </div>
+      <div class="panel-content">
+        <!-- member list goes here -->
+      </div>
+    </section>
+
+    <div class="resize-handle" data-resize="1"></div>
+
+    <section id="member" class="panel">
+      <div class="member-panel-body">
+        <div class="panel-content" id="member-detail">
+          <p class="placeholder-text">Select a member to view details</p>
+        </div>
+        <div class="staff-table-section">
+          <div class="staff-table-header">
+            <span class="staff-table-title">
+              Staff Directory
+              <span class="staff-table-count" id="staff-table-count"></span>
+            </span>
+          </div>
+          <div class="staff-table-wrap" id="staff-table-wrap">
+            <!-- staff table goes here -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -61,21 +61,37 @@
         <div class="panel-content" id="member-detail">
           <p class="placeholder-text">Select a member to view details</p>
         </div>
-        <div class="staff-table-section">
-          <div class="staff-table-header">
-            <span class="staff-table-title">
+        <div class="member-tabs-section">
+          <div class="member-tabs" role="tablist">
+            <button type="button" class="member-tab active" data-tab="staff" role="tab" aria-selected="true">
               Staff Directory
-              <span class="staff-table-count" id="staff-table-count"></span>
-            </span>
+              <span class="member-tab-count" id="staff-table-count"></span>
+            </button>
+            <button type="button" class="member-tab" data-tab="committees" role="tab" aria-selected="false">
+              Committees
+              <span class="member-tab-count" id="member-committees-count"></span>
+            </button>
+            <button type="button" class="member-tab" data-tab="offices" role="tab" aria-selected="false">
+              Offices
+              <span class="member-tab-count" id="offices-table-count"></span>
+            </button>
           </div>
-          <div class="staff-table-wrap" id="staff-table-wrap">
-            <!-- staff table goes here -->
+          <div class="member-tab-panels">
+            <div class="member-tab-panel" id="staff-table-wrap" data-panel="staff" role="tabpanel">
+              <!-- staff table goes here -->
+            </div>
+            <div class="member-tab-panel hidden" id="member-committees-wrap" data-panel="committees" role="tabpanel">
+              <!-- committees table goes here -->
+            </div>
+            <div class="member-tab-panel hidden" id="offices-table-wrap" data-panel="offices" role="tabpanel">
+              <!-- offices go here -->
+            </div>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=6"></script>
 </body>
 </html>

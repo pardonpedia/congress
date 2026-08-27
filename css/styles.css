@@ -18,7 +18,7 @@ body {
 #panels {
   grid-area: panels;
   display: grid;
-  grid-template-columns: 0.8fr 4px 0.75fr 4px 3.2fr;
+  grid-template-columns: 0.8fr 4px 0.675fr 4px 3.275fr;
   overflow: hidden;
 }
 
@@ -37,7 +37,9 @@ header h1 {
 }
 
 .panel {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #fff;
 }
 
@@ -52,9 +54,7 @@ header h1 {
   color: #666;
   background: #fafafa;
   border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  flex-shrink: 0;
 }
 
 .panel-header {
@@ -65,9 +65,7 @@ header h1 {
   padding: 0.675rem 0.9rem;
   background: #fafafa;
   border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  flex-shrink: 0;
 }
 
 .panel-header h2 {
@@ -110,9 +108,7 @@ header h1 {
   padding: 0.45rem 0.9rem;
   background: #fafafa;
   border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 2.25rem;
-  z-index: 1;
+  flex-shrink: 0;
 }
 
 .panel-filters label {
@@ -136,9 +132,8 @@ header h1 {
 }
 
 .panel-search {
-  position: sticky;
-  top: 4rem;
-  z-index: 1;
+  position: relative;
+  flex-shrink: 0;
   padding: 0.45rem;
   background: #fafafa;
   border-bottom: 1px solid #eee;
@@ -259,6 +254,9 @@ body.resizing {
 
 #committees .panel-content,
 #members .panel-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 0.45rem 0;
 }
 
@@ -619,7 +617,7 @@ body.resizing {
   overflow-y: auto;
 }
 
-.staff-table-section {
+.member-tabs-section {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -627,22 +625,36 @@ body.resizing {
   border-top: 1px solid #eee;
 }
 
-.staff-table-header {
+.member-tabs {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
   flex-shrink: 0;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.member-tab {
   padding: 0.4rem 0.8rem;
   font-size: 0.55rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #666;
-  background: #fafafa;
-  border-bottom: 1px solid #eee;
+  color: #888;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
 }
 
-.staff-table-count {
+.member-tab:hover {
+  color: #555;
+}
+
+.member-tab.active {
+  color: #333;
+  border-bottom-color: #2c3e50;
+}
+
+.member-tab-count {
   margin-left: 0.3rem;
   font-size: 0.5rem;
   font-weight: 400;
@@ -651,13 +663,24 @@ body.resizing {
   color: #999;
 }
 
-.staff-table-wrap {
+.member-tab-panels {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-tab-panel {
   flex: 1;
   min-height: 0;
   overflow: auto;
 }
 
-.staff-table-wrap .placeholder-text {
+.member-tab-panel.hidden {
+  display: none;
+}
+
+.member-tab-panel .placeholder-text {
   padding: 0.8rem;
   font-size: 0.6rem;
 }
@@ -704,4 +727,59 @@ body.resizing {
 
 .staff-table tbody tr:hover {
   background: #f9f9f9;
+}
+
+.staff-table tbody tr.committee-row {
+  cursor: pointer;
+}
+
+.staff-table td.committee-sub {
+  padding-left: 1.4rem;
+}
+
+.office-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.office-card {
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.6rem;
+}
+
+.office-address {
+  margin: 0;
+  line-height: 1.4;
+  color: #111;
+}
+
+.office-contact {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.6rem;
+  margin: 0.4rem 0 0;
+}
+
+.office-contact dt {
+  margin: 0;
+  color: #888;
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.office-contact dd {
+  margin: 0;
+  color: #111;
+}
+
+.office-contact a {
+  color: #2c3e50;
+  text-decoration: none;
+}
+
+.office-contact a:hover {
+  text-decoration: underline;
 }

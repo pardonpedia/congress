@@ -324,21 +324,26 @@
   let committeeMemberships = [];
   let memberIdsByCommittee = new Map();
   let membershipDetails = new Map();
+  let membershipsByMemberId = new Map();
 
   let allStaff = [];
   let staffByMemberId = new Map();
+  let allOffices = [];
+  let officesByMemberId = new Map();
 
   async function loadMembers() {
     try {
-      const [membersRes, membershipsRes, staffRes] = await Promise.all([
+      const [membersRes, membershipsRes, staffRes, officesRes] = await Promise.all([
         fetch('data/members.json'),
         fetch('data/committee_memberships.json'),
-        fetch('data/staff.json')
+        fetch('data/staff.json'),
+        fetch('data/offices.json')
       ]);
       
       const membersRaw = await membersRes.json();
       committeeMemberships = await membershipsRes.json();
       allStaff = await staffRes.json();
+      allOffices = await officesRes.json();
 
       // Filter out invalid members (no name)
       allMembers = membersRaw.filter(m => m.first_name || m.last_name);
@@ -349,6 +354,7 @@
       // Build committee -> member ids map and membership details lookup
       memberIdsByCommittee = new Map();
       membershipDetails = new Map();
+      membershipsByMemberId = new Map();
       committeeMemberships.forEach(cm => {
         if (!memberIdsByCommittee.has(cm.committee_id)) {
           memberIdsByCommittee.set(cm.committee_id, []);
@@ -358,6 +364,11 @@
         // Store membership details keyed by "committee_id-member_id"
         const key = `${cm.committee_id}-${cm.member_id}`;
         membershipDetails.set(key, { role: cm.role, rank: cm.rank });
+
+        if (!membershipsByMemberId.has(cm.member_id)) {
+          membershipsByMemberId.set(cm.member_id, []);
+        }
+        membershipsByMemberId.get(cm.member_id).push(cm);
       });
 
       staffByMemberId = new Map();
@@ -370,6 +381,22 @@
       });
       for (const [, staffList] of staffByMemberId) {
         staffList.sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''));
+      }
+
+      officesByMemberId = new Map();
+      allOffices.forEach(o => {
+        if (!o.member_id) return;
+        if (!officesByMemberId.has(o.member_id)) {
+          officesByMemberId.set(o.member_id, []);
+        }
+        officesByMemberId.get(o.member_id).push(o);
+      });
+      for (const [, officeList] of officesByMemberId) {
+        officeList.sort((a, b) => {
+          const cityDiff = (a.city || '').localeCompare(b.city || '');
+          if (cityDiff !== 0) return cityDiff;
+          return (a.suite || '').localeCompare(b.suite || '');
+        });
       }
 
       // Initial render
@@ -441,7 +468,7 @@
 
       const name = document.createElement('span');
       name.className = 'member-name';
-      name.textContent = `${member.last_name || ''}, ${member.first_name || ''}`;
+      name.textContent = `${member.first_name || ''} ${member.last_name || ''}`.trim();
 
       // Show rank and role if viewing a committee
       if (selectedCommitteeId) {
@@ -487,7 +514,8 @@
 
     // Always keep a member selected when the list has entries
     if (filtered.length > 0) {
-      selectMember(filtered[0]);
+      const keep = filtered.find(m => m.id === selectedMemberId);
+      selectMember(keep || filtered[0]);
     } else {
       clearMemberDetail();
     }
@@ -531,7 +559,7 @@
       const tr = document.createElement('tr');
 
       const nameCell = document.createElement('td');
-      nameCell.textContent = `${person.last_name || ''}, ${person.first_name || ''}`;
+      nameCell.textContent = `${person.first_name || ''} ${person.last_name || ''}`.trim();
       tr.appendChild(nameCell);
 
       const titleCell = document.createElement('td');
@@ -560,6 +588,217 @@
 
     table.appendChild(tbody);
     wrap.appendChild(table);
+  }
+
+  function renderCommitteesTable(memberId) {
+    const wrap = document.getElementById('member-committees-wrap');
+    const countEl = document.getElementById('member-committees-count');
+    wrap.innerHTML = '';
+
+    if (!memberId) {
+      countEl.textContent = '';
+      wrap.innerHTML = '<p class="placeholder-text">Select a member to view committees</p>';
+      return;
+    }
+
+    const memberships = (membershipsByMemberId.get(memberId) || [])
+      .map(cm => {
+        const committee = committeesById.get(cm.committee_id);
+        if (!committee) return null;
+        const parentId = (committee.parent_committee_id && committee.parent_committee_id !== committee.id)
+          ? committee.parent_committee_id
+          : null;
+        const parent = parentId ? committeesById.get(parentId) : null;
+        return {
+          committee,
+          parentName: parent ? parent.name : '',
+          role: cm.role || '',
+          rank: cm.rank,
+          isSubcommittee: Boolean(parentId)
+        };
+      })
+      .filter(Boolean);
+
+    memberships.sort((a, b) => {
+      const aGroup = a.isSubcommittee ? (a.parentName || a.committee.name) : a.committee.name;
+      const bGroup = b.isSubcommittee ? (b.parentName || b.committee.name) : b.committee.name;
+      const groupDiff = aGroup.localeCompare(bGroup);
+      if (groupDiff !== 0) return groupDiff;
+      if (a.isSubcommittee !== b.isSubcommittee) return a.isSubcommittee ? 1 : -1;
+      return a.committee.name.localeCompare(b.committee.name);
+    });
+
+    countEl.textContent = String(memberships.length);
+
+    if (memberships.length === 0) {
+      wrap.innerHTML = '<p class="placeholder-text">No committee assignments on file</p>';
+      return;
+    }
+
+    const table = document.createElement('table');
+    table.className = 'staff-table';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Committee', 'Rank'].forEach(label => {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.textContent = label;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    for (const row of memberships) {
+      const tr = document.createElement('tr');
+      tr.className = 'committee-row';
+
+      const nameCell = document.createElement('td');
+      if (row.isSubcommittee) nameCell.classList.add('committee-sub');
+      nameCell.appendChild(document.createTextNode(row.committee.name));
+      if (row.role) {
+        const role = document.createElement('span');
+        role.className = 'member-role';
+        role.textContent = row.role;
+        nameCell.appendChild(role);
+      }
+      tr.appendChild(nameCell);
+
+      const rankCell = document.createElement('td');
+      rankCell.textContent = row.rank != null ? String(row.rank) : '';
+      tr.appendChild(rankCell);
+
+      tr.addEventListener('click', () => {
+        applyCommitteeFilterFromMember(row.committee);
+      });
+
+      tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+  }
+
+  function formatOfficeAddress(office) {
+    const lines = [];
+    if (office.building) lines.push(office.building);
+    if (office.suite) lines.push(office.suite);
+    const cityStateZip = [
+      office.city,
+      [office.state, office.zip].filter(Boolean).join(' ')
+    ].filter(Boolean).join(', ');
+    if (cityStateZip) lines.push(cityStateZip);
+    return lines;
+  }
+
+  function renderOffices(memberId) {
+    const wrap = document.getElementById('offices-table-wrap');
+    const countEl = document.getElementById('offices-table-count');
+    wrap.innerHTML = '';
+
+    if (!memberId) {
+      countEl.textContent = '';
+      wrap.innerHTML = '<p class="placeholder-text">Select a member to view offices</p>';
+      return;
+    }
+
+    const offices = officesByMemberId.get(memberId) || [];
+    countEl.textContent = String(offices.length);
+
+    if (offices.length === 0) {
+      wrap.innerHTML = '<p class="placeholder-text">No offices on file for this member</p>';
+      return;
+    }
+
+    const list = document.createElement('div');
+    list.className = 'office-list';
+
+    for (const office of offices) {
+      const card = document.createElement('div');
+      card.className = 'office-card';
+
+      const address = document.createElement('p');
+      address.className = 'office-address';
+      const lines = formatOfficeAddress(office);
+      lines.forEach((line, i) => {
+        if (i > 0) address.appendChild(document.createElement('br'));
+        address.appendChild(document.createTextNode(line));
+      });
+      if (lines.length) card.appendChild(address);
+
+      const contacts = document.createElement('dl');
+      contacts.className = 'office-contact';
+      let hasContact = false;
+
+      if (office.phone) {
+        hasContact = true;
+        const dt = document.createElement('dt');
+        dt.textContent = 'Phone';
+        const dd = document.createElement('dd');
+        const link = document.createElement('a');
+        link.href = `tel:${office.phone}`;
+        link.textContent = office.phone;
+        dd.appendChild(link);
+        contacts.appendChild(dt);
+        contacts.appendChild(dd);
+      }
+
+      if (office.fax) {
+        hasContact = true;
+        const dt = document.createElement('dt');
+        dt.textContent = 'Fax';
+        const dd = document.createElement('dd');
+        dd.textContent = office.fax;
+        contacts.appendChild(dt);
+        contacts.appendChild(dd);
+      }
+
+      if (office.hours) {
+        hasContact = true;
+        const dt = document.createElement('dt');
+        dt.textContent = 'Hours';
+        const dd = document.createElement('dd');
+        dd.textContent = office.hours;
+        contacts.appendChild(dt);
+        contacts.appendChild(dd);
+      }
+
+      if (hasContact) card.appendChild(contacts);
+      list.appendChild(card);
+    }
+
+    wrap.appendChild(list);
+  }
+
+  function applyCommitteeFilterFromMember(committee) {
+    const currentChamber = document.querySelector('input[name="chamber"]:checked').value;
+    if (currentChamber !== 'both' && currentChamber !== committee.chamber) {
+      const radio = document.querySelector(`input[name="chamber"][value="${committee.chamber}"]`);
+      if (radio) {
+        radio.checked = true;
+        renderFilteredCommittees(committee.chamber);
+      }
+    }
+
+    expandToCommittee(committee.id);
+    selectCommittee(committee);
+  }
+
+  function setupMemberTabs() {
+    document.querySelectorAll('.member-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const name = tab.dataset.tab;
+        document.querySelectorAll('.member-tab').forEach(t => {
+          const active = t.dataset.tab === name;
+          t.classList.toggle('active', active);
+          t.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        document.querySelectorAll('.member-tab-panel').forEach(panel => {
+          panel.classList.toggle('hidden', panel.dataset.panel !== name);
+        });
+      });
+    });
   }
 
   // ===================
@@ -643,7 +882,7 @@
     memberSearchResults.forEach((m, i) => {
       const li = document.createElement('li');
       li.className = 'search-result';
-      const displayName = `${m.last_name}, ${m.first_name}`;
+      const displayName = `${m.first_name || ''} ${m.last_name || ''}`.trim();
       li.innerHTML = highlightMatch(displayName, query) + ` <span class="search-result-meta">(${m.party_code}-${m.state_code})</span>`;
       li.addEventListener('mousedown', e => {
         e.preventDefault();
@@ -687,9 +926,12 @@
     const container = document.getElementById('member-detail');
     container.innerHTML = '<p class="placeholder-text">No members to display</p>';
     renderStaffTable(null);
+    renderCommitteesTable(null);
+    renderOffices(null);
   }
 
   function selectMember(member) {
+    const sameMember = selectedMemberId === member.id;
     selectedMemberId = member.id;
 
     // Remove existing selection
@@ -703,9 +945,13 @@
       memberItem.classList.add('selected');
     }
 
-    // Render member detail and staff table
+    if (sameMember) return;
+
+    // Render member detail and tab tables
     renderMemberDetail(member);
     renderStaffTable(member.id);
+    renderCommitteesTable(member.id);
+    renderOffices(member.id);
   }
 
   function getMemberPhotoUrl(bioguideId) {
@@ -814,6 +1060,7 @@
     loadMembers();
     setupSearch();
     setupMemberSearch();
+    setupMemberTabs();
     document.getElementById('committee-clear')?.addEventListener('click', clearCommitteeSelection);
   });
 

@@ -737,15 +737,65 @@ body.resizing {
   padding-left: 1.4rem;
 }
 
+#offices-table-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#offices-table-wrap.hidden {
+  display: none;
+}
+
+.office-layout {
+  display: grid;
+  grid-template-columns: 10.2rem 1fr;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
 .office-list {
   display: flex;
   flex-direction: column;
+  overflow: auto;
+  width: 10.2rem;
+  min-width: 10.2rem;
+  border-right: 1px solid #eee;
 }
 
 .office-card {
   padding: 0.7rem 0.8rem;
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.6rem;
+  overflow-wrap: anywhere;
+}
+
+.office-card.has-pin {
+  cursor: pointer;
+}
+
+.office-card.has-pin:hover,
+.office-card.active {
+  background: #f9f9f9;
+}
+
+#office-map {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.office-popup {
+  font-size: 0.6rem;
+}
+
+.office-popup .office-address {
+  margin-bottom: 0.35rem;
+}
+
+.leaflet-container {
+  font-family: inherit;
 }
 
 .office-address {

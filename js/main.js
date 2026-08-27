@@ -168,7 +168,7 @@
     // Update selected committee and refresh members list
     selectedCommitteeId = committee.id;
     updateCommitteeClearButton();
-    renderFilteredMembers();
+    renderFilteredMembers({ selectFirst: true });
   }
 
   // ===================
@@ -452,7 +452,7 @@
     return filtered;
   }
 
-  function renderFilteredMembers() {
+  function renderFilteredMembers(options = {}) {
     const container = document.querySelector('#members .panel-content');
     container.innerHTML = '';
 
@@ -514,7 +514,7 @@
 
     // Always keep a member selected when the list has entries
     if (filtered.length > 0) {
-      const keep = filtered.find(m => m.id === selectedMemberId);
+      const keep = options.selectFirst ? null : filtered.find(m => m.id === selectedMemberId);
       selectMember(keep || filtered[0]);
     } else {
       clearMemberDetail();
@@ -692,9 +692,127 @@
     return lines;
   }
 
+  function officeHasCoords(office) {
+    return Number.isFinite(office.latitude) && Number.isFinite(office.longitude);
+  }
+
+  function fillAddressElement(el, office) {
+    const lines = formatOfficeAddress(office);
+    lines.forEach((line, i) => {
+      if (i > 0) el.appendChild(document.createElement('br'));
+      el.appendChild(document.createTextNode(line));
+    });
+    return lines.length;
+  }
+
+  function createOfficePopupContent(office) {
+    const popup = document.createElement('div');
+    popup.className = 'office-popup';
+
+    const address = document.createElement('p');
+    address.className = 'office-address';
+    if (fillAddressElement(address, office)) popup.appendChild(address);
+
+    if (office.phone) {
+      const phone = document.createElement('div');
+      phone.textContent = office.phone;
+      popup.appendChild(phone);
+    }
+
+    return popup;
+  }
+
+  let officeMap = null;
+  let officeMarkersById = new Map();
+  let leafletIconsReady = false;
+
+  function ensureLeafletIcons() {
+    if (leafletIconsReady || typeof L === 'undefined') return;
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+    });
+    leafletIconsReady = true;
+  }
+
+  function destroyOfficeMap() {
+    if (officeMap) {
+      officeMap.remove();
+      officeMap = null;
+    }
+    officeMarkersById = new Map();
+  }
+
+  function invalidateOfficeMap() {
+    if (!officeMap) return;
+    requestAnimationFrame(() => {
+      officeMap.invalidateSize();
+    });
+  }
+
+  function highlightOfficeCard(officeId) {
+    document.querySelectorAll('.office-card.active').forEach(el => {
+      el.classList.remove('active');
+    });
+    const card = document.querySelector(`.office-card[data-office-id="${officeId}"]`);
+    if (card) card.classList.add('active');
+  }
+
+  function focusOfficeMarker(officeId) {
+    const marker = officeMarkersById.get(officeId);
+    if (!marker || !officeMap) return;
+    officeMap.panTo(marker.getLatLng());
+    marker.openPopup();
+  }
+
+  function isOfficesTabActive() {
+    const tab = document.querySelector('.member-tab.active');
+    return Boolean(tab && tab.dataset.tab === 'offices');
+  }
+
+  function createOfficeMap(offices) {
+    destroyOfficeMap();
+    if (!isOfficesTabActive() || !offices || offices.length === 0) return;
+
+    const mapEl = document.getElementById('office-map');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    void mapEl.offsetWidth;
+    ensureLeafletIcons();
+    officeMap = L.map(mapEl, { scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(officeMap);
+
+    const bounds = [];
+    for (const office of offices) {
+      if (!officeHasCoords(office)) continue;
+      const marker = L.marker([office.latitude, office.longitude]).addTo(officeMap);
+      marker.bindPopup(createOfficePopupContent(office));
+      marker.on('popupopen', () => highlightOfficeCard(office.id));
+      officeMarkersById.set(office.id, marker);
+      bounds.push([office.latitude, office.longitude]);
+    }
+
+    if (bounds.length === 1) {
+      const latlng = L.latLng(bounds[0][0], bounds[0][1]);
+      officeMap.fitBounds(latlng.toBounds(8000), { padding: [40, 40], maxZoom: 13 });
+    } else if (bounds.length > 1) {
+      officeMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+    } else {
+      officeMap.setView([39.8, -98.5], 4);
+    }
+
+    invalidateOfficeMap();
+  }
+
   function renderOffices(memberId) {
     const wrap = document.getElementById('offices-table-wrap');
     const countEl = document.getElementById('offices-table-count');
+    destroyOfficeMap();
     wrap.innerHTML = '';
 
     if (!memberId) {
@@ -711,21 +829,21 @@
       return;
     }
 
+    const layout = document.createElement('div');
+    layout.className = 'office-layout';
+
     const list = document.createElement('div');
     list.className = 'office-list';
 
     for (const office of offices) {
       const card = document.createElement('div');
       card.className = 'office-card';
+      card.dataset.officeId = String(office.id);
+      if (officeHasCoords(office)) card.classList.add('has-pin');
 
       const address = document.createElement('p');
       address.className = 'office-address';
-      const lines = formatOfficeAddress(office);
-      lines.forEach((line, i) => {
-        if (i > 0) address.appendChild(document.createElement('br'));
-        address.appendChild(document.createTextNode(line));
-      });
-      if (lines.length) card.appendChild(address);
+      if (fillAddressElement(address, office)) card.appendChild(address);
 
       const contacts = document.createElement('dl');
       contacts.className = 'office-contact';
@@ -736,10 +854,7 @@
         const dt = document.createElement('dt');
         dt.textContent = 'Phone';
         const dd = document.createElement('dd');
-        const link = document.createElement('a');
-        link.href = `tel:${office.phone}`;
-        link.textContent = office.phone;
-        dd.appendChild(link);
+        dd.textContent = office.phone;
         contacts.appendChild(dt);
         contacts.appendChild(dd);
       }
@@ -765,10 +880,23 @@
       }
 
       if (hasContact) card.appendChild(contacts);
+
+      card.addEventListener('click', () => {
+        highlightOfficeCard(office.id);
+        focusOfficeMarker(office.id);
+      });
+
       list.appendChild(card);
     }
 
-    wrap.appendChild(list);
+    const mapEl = document.createElement('div');
+    mapEl.id = 'office-map';
+
+    layout.appendChild(list);
+    layout.appendChild(mapEl);
+    wrap.appendChild(layout);
+
+    if (isOfficesTabActive()) createOfficeMap(offices);
   }
 
   function applyCommitteeFilterFromMember(committee) {
@@ -797,6 +925,12 @@
         document.querySelectorAll('.member-tab-panel').forEach(panel => {
           panel.classList.toggle('hidden', panel.dataset.panel !== name);
         });
+        if (name === 'offices') {
+          const offices = selectedMemberId ? (officesByMemberId.get(selectedMemberId) || []) : [];
+          if (offices.length) createOfficeMap(offices);
+        } else {
+          destroyOfficeMap();
+        }
       });
     });
   }
@@ -1130,6 +1264,7 @@
       document.body.classList.remove('resizing');
       activeHandle.classList.remove('active');
       activeHandle = null;
+      invalidateOfficeMap();
     }
   });
 })();

@@ -1100,6 +1100,146 @@
     return `${member.party} — ${member.state}`;
   }
 
+  const SOCIAL_ICONS = {
+    x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.84c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.43-4.92 8.43-9.94z"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7.2A4.8 4.8 0 1 0 12 16.8 4.8 4.8 0 0 0 12 7.2zm0 7.92a3.12 3.12 0 1 1 0-6.24 3.12 3.12 0 0 1 0 6.24zM17.52 6.96a1.12 1.12 0 1 1-2.24 0 1.12 1.12 0 0 1 2.24 0zM12 4.32c-2.07 0-2.33.01-3.14.05-.8.04-1.35.16-1.83.35a3.7 3.7 0 0 0-1.34.87 3.7 3.7 0 0 0-.87 1.34c-.19.48-.31 1.03-.35 1.83-.04.81-.05 1.07-.05 3.14s.01 2.33.05 3.14c.04.8.16 1.35.35 1.83.2.5.46.9.87 1.34.44.41.84.67 1.34.87.48.19 1.03.31 1.83.35.81.04 1.07.05 3.14.05s2.33-.01 3.14-.05c.8-.04 1.35-.16 1.83-.35a3.7 3.7 0 0 0 1.34-.87 3.7 3.7 0 0 0 .87-1.34c.19-.48.31-1.03.35-1.83.04-.81.05-1.07.05-3.14s-.01-2.33-.05-3.14c-.04-.8-.16-1.35-.35-1.83a3.7 3.7 0 0 0-.87-1.34 3.7 3.7 0 0 0-1.34-.87c-.48-.19-1.03-.31-1.83-.35-.81-.04-1.07-.05-3.14-.05zm0-1.44c2.1 0 2.35.01 3.18.05.82.04 1.39.17 1.88.36.51.2.95.46 1.38.9.44.43.7.87.9 1.38.19.49.32 1.06.36 1.88.04.83.05 1.08.05 3.18s-.01 2.35-.05 3.18c-.04.82-.17 1.39-.36 1.88-.2.51-.46.95-.9 1.38-.43.44-.87.7-1.38.9-.49.19-1.06.32-1.88.36-.83.04-1.08.05-3.18.05s-2.35-.01-3.18-.05c-.82-.04-1.39-.17-1.88-.36a3.72 3.72 0 0 1-1.38-.9 3.72 3.72 0 0 1-.9-1.38c-.19-.49-.32-1.06-.36-1.88-.04-.83-.05-1.08-.05-3.18s.01-2.35.05-3.18c.04-.82.17-1.39.36-1.88.2-.51.46-.95.9-1.38.43-.44.87-.7 1.38-.9.49-.19 1.06-.32 1.88-.36.83-.04 1.08-.05 3.18-.05z"/></svg>',
+    youtube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.54 3.6 12 3.6 12 3.6s-7.54 0-9.38.46A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14C4.46 20.4 12 20.4 12 20.4s7.54 0 9.38-.46a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8zM9.6 15.6V8.4L15.84 12 9.6 15.6z"/></svg>'
+  };
+
+  function normalizeSocialHandle(value) {
+    if (!value || typeof value !== 'string') return '';
+    return value.trim().replace(/^@+/, '');
+  }
+
+  function socialUrlFromHandle(base, handle) {
+    if (/^https?:\/\//i.test(handle)) return handle;
+    return base + encodeURIComponent(handle);
+  }
+
+  function createSocialLink(network, url, label) {
+    const a = document.createElement('a');
+    a.className = `detail-social detail-social-${network}`;
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.title = label;
+    a.setAttribute('aria-label', label);
+    a.innerHTML = SOCIAL_ICONS[network];
+    return a;
+  }
+
+  function renderMemberSocials(member) {
+    const links = [];
+
+    const twitter = normalizeSocialHandle(member.twitter);
+    if (twitter) {
+      links.push(createSocialLink('x', socialUrlFromHandle('https://x.com/', twitter), `X (Twitter): @${twitter}`));
+    }
+
+    const facebook = normalizeSocialHandle(member.facebook);
+    if (facebook) {
+      links.push(createSocialLink('facebook', socialUrlFromHandle('https://www.facebook.com/', facebook), `Facebook: ${facebook}`));
+    }
+
+    const instagram = normalizeSocialHandle(member.instagram);
+    if (instagram) {
+      links.push(createSocialLink('instagram', socialUrlFromHandle('https://www.instagram.com/', instagram), `Instagram: @${instagram}`));
+    }
+
+    const youtubeId = normalizeSocialHandle(member.youtube_id);
+    const youtube = normalizeSocialHandle(member.youtube);
+    if (youtubeId) {
+      links.push(createSocialLink('youtube', `https://www.youtube.com/channel/${encodeURIComponent(youtubeId)}`, 'YouTube channel'));
+    } else if (youtube) {
+      const ytUrl = /^UC[\w-]{21,}$/.test(youtube)
+        ? `https://www.youtube.com/channel/${encodeURIComponent(youtube)}`
+        : socialUrlFromHandle('https://www.youtube.com/@', youtube);
+      links.push(createSocialLink('youtube', ytUrl, `YouTube: ${youtube}`));
+    }
+
+    if (links.length === 0) return null;
+
+    const row = document.createElement('div');
+    row.className = 'detail-socials';
+    for (const link of links) row.appendChild(link);
+    return row;
+  }
+
+  function formatPhoneHref(phone) {
+    const digits = String(phone).replace(/[^\d+]/g, '');
+    return digits ? `tel:${digits}` : '';
+  }
+
+  function formatDcOfficeAddress(address) {
+    const text = address.trim();
+    const match = text.match(/^(.*?)\s+(Washington,?\s*DC\b.*)$/i);
+    if (!match) return [text];
+    const cityZip = match[2].replace(/\bWashington\s+DC\b/i, 'Washington, DC');
+    return [match[1], cityZip];
+  }
+
+  function renderDcOffice(member) {
+    const address = typeof member.dc_office_address === 'string' ? member.dc_office_address.trim() : '';
+    const phone = typeof member.dc_office_phone === 'string' ? member.dc_office_phone.trim() : '';
+    const fax = typeof member.dc_office_fax === 'string' ? member.dc_office_fax.trim() : '';
+    if (!address && !phone && !fax) return null;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'detail-dc-office';
+
+    const heading = document.createElement('div');
+    heading.className = 'detail-dc-label';
+    heading.textContent = 'DC Office';
+    wrap.appendChild(heading);
+
+    if (address) {
+      const addr = document.createElement('p');
+      addr.className = 'detail-dc-address';
+      const lines = formatDcOfficeAddress(address);
+      lines.forEach((line, i) => {
+        if (i > 0) addr.appendChild(document.createElement('br'));
+        addr.appendChild(document.createTextNode(line));
+      });
+      wrap.appendChild(addr);
+    }
+
+    if (phone || fax) {
+      const dl = document.createElement('dl');
+      dl.className = 'detail-dc-contact';
+
+      if (phone) {
+        const dt = document.createElement('dt');
+        dt.textContent = 'Phone';
+        const dd = document.createElement('dd');
+        const href = formatPhoneHref(phone);
+        if (href) {
+          const a = document.createElement('a');
+          a.href = href;
+          a.textContent = phone;
+          dd.appendChild(a);
+        } else {
+          dd.textContent = phone;
+        }
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      }
+
+      if (fax) {
+        const dt = document.createElement('dt');
+        dt.textContent = 'Fax';
+        const dd = document.createElement('dd');
+        dd.textContent = fax;
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      }
+
+      wrap.appendChild(dl);
+    }
+
+    return wrap;
+  }
+
   function renderMemberDetail(member) {
     const container = document.getElementById('member-detail');
     container.classList.add('detail-enter');
@@ -1146,7 +1286,6 @@
     const info = document.createElement('div');
     info.className = 'detail-info';
 
-    // Name and Bioguide ID
     const nameRow = document.createElement('div');
     nameRow.className = 'detail-name-row';
 
@@ -1154,13 +1293,6 @@
     nameEl.className = 'detail-name';
     nameEl.textContent = displayName;
     nameRow.appendChild(nameEl);
-
-    if (member.bioguide_id) {
-      const bioguide = document.createElement('span');
-      bioguide.className = 'detail-bioguide';
-      bioguide.textContent = `Bioguide ID: ${member.bioguide_id}`;
-      nameRow.appendChild(bioguide);
-    }
 
     info.appendChild(nameRow);
 
@@ -1181,7 +1313,14 @@
     partyState.appendChild(document.createTextNode(` ${formatPartyLocation(member)}`));
     info.appendChild(partyState);
 
+    const socials = renderMemberSocials(member);
+    if (socials) info.appendChild(socials);
+
     header.appendChild(info);
+
+    const dcOffice = renderDcOffice(member);
+    if (dcOffice) header.appendChild(dcOffice);
+
     container.appendChild(header);
 
     requestAnimationFrame(() => {

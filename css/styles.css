@@ -142,7 +142,7 @@ header h1 {
 .panel-search input {
   width: 100%;
   padding: 0.3375rem 1.35rem 0.3375rem 0.45rem;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   border: 1px solid #ddd;
   border-radius: 3px;
   outline: none;
@@ -478,6 +478,8 @@ body.resizing {
 
 .detail-header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid #eee;
@@ -526,24 +528,32 @@ body.resizing {
 
 @media (prefers-reduced-motion: reduce) {
   #member-detail,
-  .detail-photo {
+  .detail-photo,
+  .detail-social {
     transition: none;
   }
 
   .detail-photo-wrap.is-loading::after {
     animation: none;
   }
+
+  .detail-social:hover {
+    transform: none;
+  }
 }
 
 .detail-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 110px;
 }
 
 .detail-name-row {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 0.25rem;
 }
@@ -554,13 +564,6 @@ body.resizing {
   font-size: 1.2rem;
   font-weight: 600;
   color: #111;
-}
-
-.detail-bioguide {
-  flex-shrink: 0;
-  font-size: 0.6875rem;
-  font-weight: 400;
-  color: #999;
 }
 
 .detail-leadership {
@@ -574,6 +577,109 @@ body.resizing {
   font-size: 0.8125rem;
   color: #444;
   border-bottom: none;
+}
+
+.detail-socials {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-top: auto;
+}
+
+.detail-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 3px;
+  color: #fff;
+  text-decoration: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.detail-social:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.detail-social:focus-visible {
+  outline: 2px solid #2c3e50;
+  outline-offset: 2px;
+}
+
+.detail-social svg {
+  display: block;
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.detail-social-x {
+  background: #0f1419;
+}
+
+.detail-social-facebook {
+  background: #1877f2;
+}
+
+.detail-social-instagram {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+}
+
+.detail-social-youtube {
+  background: #ff0000;
+}
+
+.detail-dc-office {
+  flex: 0 1 16rem;
+  margin-left: auto;
+  padding-left: 1rem;
+  border-left: 1px solid #eee;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  color: #111;
+}
+
+.detail-dc-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.44rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #888;
+}
+
+.detail-dc-address {
+  margin: 0;
+}
+
+.detail-dc-contact {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.05rem;
+  margin: 0.35rem 0 0;
+}
+
+.detail-dc-contact dt {
+  margin: 0;
+  color: #888;
+  font-size: 0.44rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detail-dc-contact dd {
+  margin: 0 0 0.25rem;
+}
+
+.detail-dc-contact a {
+  color: #2c3e50;
+  text-decoration: none;
+}
+
+.detail-dc-contact a:hover {
+  text-decoration: underline;
 }
 
 .detail-row {
@@ -749,7 +855,7 @@ body.resizing {
 
 .office-layout {
   display: grid;
-  grid-template-columns: 10.2rem 1fr;
+  grid-template-columns: 9.18rem 1fr;
   flex: 1;
   min-height: 0;
   height: 100%;
@@ -759,8 +865,8 @@ body.resizing {
   display: flex;
   flex-direction: column;
   overflow: auto;
-  width: 10.2rem;
-  min-width: 10.2rem;
+  width: 9.18rem;
+  min-width: 9.18rem;
   border-right: 1px solid #eee;
 }
 

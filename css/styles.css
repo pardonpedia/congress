@@ -566,6 +566,20 @@ body.resizing {
   color: #111;
 }
 
+.detail-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.detail-name a:hover {
+  text-decoration: underline;
+}
+
+.detail-name a:focus-visible {
+  outline: 2px solid #2c3e50;
+  outline-offset: 2px;
+}
+
 .detail-leadership {
   margin-bottom: 0.25rem;
   font-size: 0.6875rem;
@@ -628,6 +642,10 @@ body.resizing {
 
 .detail-social-youtube {
   background: #ff0000;
+}
+
+.detail-social-wikipedia {
+  background: #000;
 }
 
 .detail-dc-office {

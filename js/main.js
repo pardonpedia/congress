@@ -1104,7 +1104,8 @@
     x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
     facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.84c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.43-4.92 8.43-9.94z"/></svg>',
     instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7.2A4.8 4.8 0 1 0 12 16.8 4.8 4.8 0 0 0 12 7.2zm0 7.92a3.12 3.12 0 1 1 0-6.24 3.12 3.12 0 0 1 0 6.24zM17.52 6.96a1.12 1.12 0 1 1-2.24 0 1.12 1.12 0 0 1 2.24 0zM12 4.32c-2.07 0-2.33.01-3.14.05-.8.04-1.35.16-1.83.35a3.7 3.7 0 0 0-1.34.87 3.7 3.7 0 0 0-.87 1.34c-.19.48-.31 1.03-.35 1.83-.04.81-.05 1.07-.05 3.14s.01 2.33.05 3.14c.04.8.16 1.35.35 1.83.2.5.46.9.87 1.34.44.41.84.67 1.34.87.48.19 1.03.31 1.83.35.81.04 1.07.05 3.14.05s2.33-.01 3.14-.05c.8-.04 1.35-.16 1.83-.35a3.7 3.7 0 0 0 1.34-.87 3.7 3.7 0 0 0 .87-1.34c.19-.48.31-1.03.35-1.83.04-.81.05-1.07.05-3.14s-.01-2.33-.05-3.14c-.04-.8-.16-1.35-.35-1.83a3.7 3.7 0 0 0-.87-1.34 3.7 3.7 0 0 0-1.34-.87c-.48-.19-1.03-.31-1.83-.35-.81-.04-1.07-.05-3.14-.05zm0-1.44c2.1 0 2.35.01 3.18.05.82.04 1.39.17 1.88.36.51.2.95.46 1.38.9.44.43.7.87.9 1.38.19.49.32 1.06.36 1.88.04.83.05 1.08.05 3.18s-.01 2.35-.05 3.18c-.04.82-.17 1.39-.36 1.88-.2.51-.46.95-.9 1.38-.43.44-.87.7-1.38.9-.49.19-1.06.32-1.88.36-.83.04-1.08.05-3.18.05s-2.35-.01-3.18-.05c-.82-.04-1.39-.17-1.88-.36a3.72 3.72 0 0 1-1.38-.9 3.72 3.72 0 0 1-.9-1.38c-.19-.49-.32-1.06-.36-1.88-.04-.83-.05-1.08-.05-3.18s.01-2.35.05-3.18c.04-.82.17-1.39.36-1.88.2-.51.46-.95.9-1.38.43-.44.87-.7 1.38-.9.49-.19 1.06-.32 1.88-.36.83-.04 1.08-.05 3.18-.05z"/></svg>',
-    youtube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.54 3.6 12 3.6 12 3.6s-7.54 0-9.38.46A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14C4.46 20.4 12 20.4 12 20.4s7.54 0 9.38-.46a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8zM9.6 15.6V8.4L15.84 12 9.6 15.6z"/></svg>'
+    youtube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.54 3.6 12 3.6 12 3.6s-7.54 0-9.38.46A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14C4.46 20.4 12 20.4 12 20.4s7.54 0 9.38-.46a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8zM9.6 15.6V8.4L15.84 12 9.6 15.6z"/></svg>',
+    wikipedia: '<svg viewBox="0 0 24 24" aria-hidden="true"><text x="12" y="17.5" text-anchor="middle" font-size="15" font-family="Georgia, \'Times New Roman\', serif" font-weight="700" fill="currentColor">W</text></svg>'
   };
 
   function normalizeSocialHandle(value) {
@@ -1156,6 +1157,14 @@
         ? `https://www.youtube.com/channel/${encodeURIComponent(youtube)}`
         : socialUrlFromHandle('https://www.youtube.com/@', youtube);
       links.push(createSocialLink('youtube', ytUrl, `YouTube: ${youtube}`));
+    }
+
+    const wikipedia = typeof member.wikipedia === 'string' ? member.wikipedia.trim() : '';
+    if (wikipedia) {
+      const wikiUrl = /^https?:\/\//i.test(wikipedia)
+        ? wikipedia
+        : `https://en.wikipedia.org/wiki/${wikipedia.replace(/ /g, '_')}`;
+      links.push(createSocialLink('wikipedia', wikiUrl, `Wikipedia: ${wikipedia}`));
     }
 
     if (links.length === 0) return null;
@@ -1291,7 +1300,17 @@
 
     const nameEl = document.createElement('h3');
     nameEl.className = 'detail-name';
-    nameEl.textContent = displayName;
+    const officialUrl = typeof member.url === 'string' ? member.url.trim() : '';
+    if (officialUrl) {
+      const nameLink = document.createElement('a');
+      nameLink.href = officialUrl;
+      nameLink.target = '_blank';
+      nameLink.rel = 'noopener noreferrer';
+      nameLink.textContent = displayName;
+      nameEl.appendChild(nameLink);
+    } else {
+      nameEl.textContent = displayName;
+    }
     nameRow.appendChild(nameEl);
 
     info.appendChild(nameRow);

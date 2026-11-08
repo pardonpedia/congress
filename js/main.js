@@ -17,13 +17,17 @@
       committeesById = new Map(allCommittees.map(c => [c.id, c]));
 
       // Initial render with default filter (senate)
-      renderFilteredCommittees('senate');
+      renderFilteredCommittees();
 
       // Listen for filter changes
       document.querySelectorAll('input[name="chamber"]').forEach(radio => {
-        radio.addEventListener('change', e => {
-          renderFilteredCommittees(e.target.value);
+        radio.addEventListener('change', () => {
+          renderFilteredCommittees();
         });
+      });
+
+      document.getElementById('target-committees')?.addEventListener('change', () => {
+        renderFilteredCommittees();
       });
 
     } catch (err) {
@@ -33,16 +37,42 @@
     }
   }
 
-  function renderFilteredCommittees(chamberFilter) {
+  const TARGET_COMMITTEE_NAMES = new Set([
+    'House Committee on Foreign Affairs',
+    'Senate Committee on Foreign Relations'
+  ]);
+
+  const TARGET_COMMITTEE_ACRONYMS = new Set([
+    'NSRP',
+    'SFOPS'
+  ]);
+
+  function isTargetCommittee(committee) {
+    let id = committee.id;
+    const seen = new Set();
+    while (id && !seen.has(id)) {
+      seen.add(id);
+      const current = committeesById.get(id);
+      if (!current) return false;
+      if (TARGET_COMMITTEE_NAMES.has(current.name) || TARGET_COMMITTEE_ACRONYMS.has(current.acronym)) return true;
+      id = current.parent_committee_id !== current.id ? current.parent_committee_id : null;
+    }
+    return false;
+  }
+
+  function renderFilteredCommittees() {
     const container = document.querySelector('#committees .panel-content');
     container.innerHTML = '';
 
-    // Filter committees by chamber
+    const chamberFilter = document.querySelector('input[name="chamber"]:checked').value;
+    const targetOnly = document.getElementById('target-committees')?.checked;
+
+    // Filter committees by chamber, and by the foreign affairs committees when requested
     const filtered = allCommittees.filter(c => {
-      if (chamberFilter === 'both') {
-        return c.chamber === 'senate' || c.chamber === 'house';
-      }
-      return c.chamber === chamberFilter;
+      const matchesChamber = chamberFilter === 'both'
+        ? (c.chamber === 'senate' || c.chamber === 'house')
+        : c.chamber === chamberFilter;
+      return matchesChamber && (!targetOnly || isTargetCommittee(c));
     });
 
     // Get all valid IDs including ancestors
@@ -83,6 +113,18 @@
 
     // Update count (only committees that match the filter, not ancestors added for tree structure)
     document.getElementById('committee-count').textContent = filtered.length;
+
+    if (selectedCommitteeId && !filtered.some(c => c.id === selectedCommitteeId)) {
+      clearCommitteeSelection();
+    } else if (selectedCommitteeId) {
+      const treeItem = document.querySelector(`.tree-item[data-id="${selectedCommitteeId}"]`);
+      if (treeItem) treeItem.classList.add('selected');
+    }
+  }
+
+  function formatCommitteeName(committee) {
+    if (committee.acronym) return `${committee.acronym} — ${committee.name}`;
+    return committee.name;
   }
 
   function renderTreeNodes(childrenOf, parentId, parentEl) {
@@ -106,7 +148,7 @@
 
       const name = document.createElement('span');
       name.className = 'name';
-      name.textContent = committee.name;
+      name.textContent = formatCommitteeName(committee);
       item.appendChild(name);
 
       li.appendChild(item);
@@ -172,97 +214,8 @@
   }
 
   // ===================
-  // Committee Search
+  // Committee tree helpers
   // ===================
-
-  let searchIndex = -1;
-  let searchResults = [];
-
-  function setupSearch() {
-    const input = document.getElementById('committee-search');
-    const resultsEl = document.getElementById('committee-search-results');
-
-    input.addEventListener('input', () => {
-      const query = input.value.trim().toLowerCase();
-      searchIndex = -1;
-
-      if (query.length < 3) {
-        resultsEl.innerHTML = '';
-        resultsEl.classList.remove('visible');
-        return;
-      }
-
-      const chamberFilter = document.querySelector('input[name="chamber"]:checked').value;
-      
-      // Filter by chamber and search query
-      searchResults = allCommittees.filter(c => {
-        const matchesChamber = chamberFilter === 'both' 
-          ? (c.chamber === 'senate' || c.chamber === 'house')
-          : c.chamber === chamberFilter;
-        return matchesChamber && c.name.toLowerCase().includes(query);
-      }).slice(0, 10);
-
-      renderSearchResults(query);
-    });
-
-    input.addEventListener('keydown', e => {
-      if (!resultsEl.classList.contains('visible')) return;
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        searchIndex = Math.min(searchIndex + 1, searchResults.length - 1);
-        updateSearchSelection();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        searchIndex = Math.max(searchIndex - 1, 0);
-        updateSearchSelection();
-      } else if (e.key === 'Tab' || e.key === 'Enter') {
-        if (searchIndex >= 0 && searchResults[searchIndex]) {
-          e.preventDefault();
-          selectSearchResult(searchResults[searchIndex]);
-        }
-      } else if (e.key === 'Escape') {
-        resultsEl.innerHTML = '';
-        resultsEl.classList.remove('visible');
-      }
-    });
-
-    input.addEventListener('blur', () => {
-      setTimeout(() => {
-        resultsEl.classList.remove('visible');
-      }, 150);
-    });
-
-    input.addEventListener('focus', () => {
-      if (searchResults.length > 0 && input.value.trim().length >= 3) {
-        resultsEl.classList.add('visible');
-      }
-    });
-  }
-
-  function renderSearchResults(query) {
-    const resultsEl = document.getElementById('committee-search-results');
-    resultsEl.innerHTML = '';
-
-    if (searchResults.length === 0) {
-      resultsEl.classList.remove('visible');
-      return;
-    }
-
-    searchResults.forEach((c, i) => {
-      const li = document.createElement('li');
-      li.className = 'search-result';
-      li.innerHTML = highlightMatch(c.name, query);
-      li.addEventListener('click', () => selectSearchResult(c));
-      li.addEventListener('mouseenter', () => {
-        searchIndex = i;
-        updateSearchSelection();
-      });
-      resultsEl.appendChild(li);
-    });
-
-    resultsEl.classList.add('visible');
-  }
 
   function highlightMatch(text, query) {
     const idx = text.toLowerCase().indexOf(query);
@@ -271,31 +224,6 @@
     const match = text.slice(idx, idx + query.length);
     const after = text.slice(idx + query.length);
     return `${before}<mark>${match}</mark>${after}`;
-  }
-
-  function updateSearchSelection() {
-    const resultsEl = document.getElementById('committee-search-results');
-    const items = resultsEl.querySelectorAll('.search-result');
-    items.forEach((item, i) => {
-      item.classList.toggle('selected', i === searchIndex);
-    });
-  }
-
-  function selectSearchResult(committee) {
-    const input = document.getElementById('committee-search');
-    const resultsEl = document.getElementById('committee-search-results');
-    
-    input.value = '';
-    resultsEl.innerHTML = '';
-    resultsEl.classList.remove('visible');
-    searchResults = [];
-    searchIndex = -1;
-
-    // Expand tree to show selected committee
-    expandToCommittee(committee.id);
-    
-    // Select the committee
-    selectCommittee(committee);
   }
 
   function expandToCommittee(committeeId) {
@@ -347,6 +275,8 @@
 
       // Filter out invalid members (no name)
       allMembers = membersRaw.filter(m => m.first_name || m.last_name);
+      cleanupMemberYears(allMembers);
+      populateStateFilter();
 
       // Build lookup by id
       membersById = new Map(allMembers.map(m => [m.id, m]));
@@ -409,11 +339,47 @@
         });
       });
 
+      document.getElementById('state-select')?.addEventListener('change', () => {
+        renderFilteredMembers();
+      });
+
+      document.getElementById('state-clear')?.addEventListener('click', () => {
+        const select = document.getElementById('state-select');
+        if (!select || select.value === 'all') return;
+        select.value = 'all';
+        renderFilteredMembers();
+      });
+
     } catch (err) {
       const container = document.querySelector('#members .panel-content');
       container.innerHTML = '<p class="load-error">Failed to load members.<br><small>Try running a local server (fetch doesn\'t work with file:// URLs)</small></p>';
       console.error(err);
     }
+  }
+
+  function compareUnfilteredMembers(a, b) {
+    const stateDiff = (a.state_code || '').localeCompare(b.state_code || '');
+    if (stateDiff !== 0) return stateDiff;
+
+    const chamberOrder = { senate: 0, house: 1 };
+    const chamberDiff = (chamberOrder[a.chamber] ?? 2) - (chamberOrder[b.chamber] ?? 2);
+    if (chamberDiff !== 0) return chamberDiff;
+
+    if (a.chamber === 'senate') {
+      const aStart = a.senate_service_start || '9999-99-99';
+      const bStart = b.senate_service_start || '9999-99-99';
+      if (aStart !== bStart) return aStart < bStart ? -1 : 1;
+
+      const aYear = a.next_election_year ?? 9999;
+      const bYear = b.next_election_year ?? 9999;
+      if (aYear !== bYear) return aYear - bYear;
+
+      return (a.last_name || '').localeCompare(b.last_name || '');
+    }
+
+    const districtDiff = (a.district_number ?? 999) - (b.district_number ?? 999);
+    if (districtDiff !== 0) return districtDiff;
+    return (a.last_name || '').localeCompare(b.last_name || '');
   }
 
   function getFilteredMembers() {
@@ -433,26 +399,67 @@
       filtered = filtered.filter(m => m.party_code === partyFilter);
     }
 
-    const partyOrder = { R: 0, D: 1, I: 2 };
-    filtered.sort((a, b) => {
-      const partyDiff = (partyOrder[a.party_code] ?? 3) - (partyOrder[b.party_code] ?? 3);
-      if (partyDiff !== 0) return partyDiff;
+    if (!selectedCommitteeId) {
+      const stateFilter = document.getElementById('state-select')?.value;
+      if (stateFilter && stateFilter !== 'all') {
+        filtered = filtered.filter(m => m.state_code === stateFilter);
+      }
+    }
 
-      if (selectedCommitteeId) {
+    if (selectedCommitteeId) {
+      const partyOrder = { R: 0, D: 1, I: 2 };
+      filtered.sort((a, b) => {
+        const partyDiff = (partyOrder[a.party_code] ?? 3) - (partyOrder[b.party_code] ?? 3);
+        if (partyDiff !== 0) return partyDiff;
+
         const aKey = `${selectedCommitteeId}-${a.id}`;
         const bKey = `${selectedCommitteeId}-${b.id}`;
         const aRank = membershipDetails.get(aKey)?.rank ?? 999;
         const bRank = membershipDetails.get(bKey)?.rank ?? 999;
         return aRank - bRank;
-      }
-
-      return (a.last_name || '').localeCompare(b.last_name || '');
-    });
+      });
+    } else {
+      filtered.sort(compareUnfilteredMembers);
+    }
 
     return filtered;
   }
 
+  function populateStateFilter() {
+    const select = document.getElementById('state-select');
+    if (!select) return;
+
+    const byCode = new Map();
+    for (const member of allMembers) {
+      if (!member.state_code || byCode.has(member.state_code)) continue;
+      byCode.set(member.state_code, member.state || member.state_code);
+    }
+
+    const options = [...byCode.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    for (const [code, name] of options) {
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = name;
+      select.appendChild(option);
+    }
+  }
+
+  function syncStateFilter() {
+    const row = document.getElementById('state-filter');
+    const select = document.getElementById('state-select');
+    if (!row || !select) return;
+
+    if (selectedCommitteeId) {
+      row.classList.add('hidden');
+      if (select.value !== 'all') select.value = 'all';
+    } else {
+      row.classList.remove('hidden');
+    }
+  }
+
   function renderFilteredMembers(options = {}) {
+    syncStateFilter();
+
     const container = document.querySelector('#members .panel-content');
     container.innerHTML = '';
 
@@ -461,9 +468,21 @@
     const ul = document.createElement('ul');
     ul.className = 'member-list';
 
+    const stateSelect = document.getElementById('state-select');
+    const showStateDividers = !selectedCommitteeId && (!stateSelect || stateSelect.value === 'all');
+    let lastStateCode = null;
+
     for (const member of filtered) {
+      if (showStateDividers && member.state_code !== lastStateCode) {
+        lastStateCode = member.state_code;
+        const divider = document.createElement('li');
+        divider.className = 'member-state-divider';
+        divider.textContent = member.state || member.state_code || '';
+        ul.appendChild(divider);
+      }
+
       const li = document.createElement('li');
-      li.className = 'member-item';
+      li.className = 'member-item' + (member.chamber === 'senate' ? ' chamber-senate' : '');
       li.dataset.id = member.id;
 
       const name = document.createElement('span');
@@ -656,7 +675,7 @@
 
       const nameCell = document.createElement('td');
       if (row.isSubcommittee) nameCell.classList.add('committee-sub');
-      nameCell.appendChild(document.createTextNode(row.committee.name));
+      nameCell.appendChild(document.createTextNode(formatCommitteeName(row.committee)));
       if (row.role) {
         const role = document.createElement('span');
         role.className = 'member-role';
@@ -905,7 +924,7 @@
       const radio = document.querySelector(`input[name="chamber"][value="${committee.chamber}"]`);
       if (radio) {
         radio.checked = true;
-        renderFilteredCommittees(committee.chamber);
+        renderFilteredCommittees();
       }
     }
 
@@ -1092,10 +1111,21 @@
     return `https://unitedstates.github.io/images/congress/225x275/${bioguideId}.jpg`;
   }
 
+  function cleanupMemberYears(members) {
+    for (const member of members) {
+      if (member.next_election_year === 2026) {
+        member.next_election_year = 2032;
+      }
+    }
+  }
+
   function formatPartyLocation(member) {
     if (member.chamber === 'house' && member.district_number) {
       const district = member.is_at_large ? 'At Large' : `District ${member.district_number}`;
       return `${member.party} — ${member.state} ${district}`;
+    }
+    if (member.chamber === 'senate' && member.next_election_year) {
+      return `${member.party} — ${member.state} ${member.next_election_year}`;
     }
     return `${member.party} — ${member.state}`;
   }
@@ -1350,7 +1380,6 @@
   document.addEventListener('DOMContentLoaded', () => {
     loadCommittees();
     loadMembers();
-    setupSearch();
     setupMemberSearch();
     setupMemberTabs();
     document.getElementById('committee-clear')?.addEventListener('click', clearCommitteeSelection);

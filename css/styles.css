@@ -451,7 +451,8 @@ body.resizing {
 .member-item.selected .member-name,
 .member-item.selected .member-rank,
 .member-item.selected .member-role,
-.member-item.selected .member-state {
+.member-item.selected .member-state,
+.member-item.selected .member-extra {
   color: #fff;
 }
 
@@ -503,6 +504,14 @@ body.resizing {
   font-size: 0.6875rem;
   color: #666;
   min-width: 1.5rem;
+  text-align: right;
+}
+
+.member-extra {
+  font-size: 0.6875rem;
+  color: #666;
+  min-width: 2.4rem;
+  text-align: right;
 }
 
 .search-result-meta {
@@ -655,6 +664,12 @@ body.resizing {
   font-size: 0.8125rem;
   color: #444;
   border-bottom: none;
+}
+
+.detail-facts {
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  color: #666;
 }
 
 .detail-socials {

@@ -517,9 +517,18 @@
       state.className = 'member-state';
       state.textContent = member.state_code;
 
+      const extra = document.createElement('span');
+      extra.className = 'member-extra';
+      if (member.chamber === 'senate' && member.next_election_year) {
+        extra.textContent = String(member.next_election_year);
+      } else if (member.chamber === 'house' && member.district_number) {
+        extra.textContent = String(member.district_number);
+      }
+
       li.appendChild(party);
       li.appendChild(name);
       li.appendChild(state);
+      li.appendChild(extra);
 
       li.addEventListener('click', () => selectMember(member));
 
@@ -1130,6 +1139,40 @@
     return `${member.party} — ${member.state}`;
   }
 
+  function completedYears(isoDate, today = new Date()) {
+    if (typeof isoDate !== 'string') return null;
+    const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    let years = today.getFullYear() - year;
+    const monthDelta = (today.getMonth() + 1) - month;
+    if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < day)) years--;
+    return years >= 0 ? years : null;
+  }
+
+  function formatYearCount(years) {
+    if (years < 1) return 'Less than a year';
+    if (years === 1) return '1 year';
+    return `${years} years`;
+  }
+
+  function formatMemberFacts(member) {
+    const parts = [];
+    const age = completedYears(member.birthday);
+    if (age != null) parts.push(`Age ${age}`);
+
+    const start = member.chamber === 'senate' ? member.senate_service_start : member.house_service_start;
+    const tenure = completedYears(start);
+    if (tenure != null) {
+      const chamberLabel = member.chamber === 'senate' ? 'Senate' : 'House';
+      parts.push(`${formatYearCount(tenure)} in the ${chamberLabel}`);
+    }
+
+    return parts.join(' · ');
+  }
+
   const SOCIAL_ICONS = {
     x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
     facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.84c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.43-4.92 8.43-9.94z"/></svg>',
@@ -1361,6 +1404,14 @@
     partyState.appendChild(partyBadge);
     partyState.appendChild(document.createTextNode(` ${formatPartyLocation(member)}`));
     info.appendChild(partyState);
+
+    const factsText = formatMemberFacts(member);
+    if (factsText) {
+      const facts = document.createElement('div');
+      facts.className = 'detail-facts';
+      facts.textContent = factsText;
+      info.appendChild(facts);
+    }
 
     const socials = renderMemberSocials(member);
     if (socials) info.appendChild(socials);

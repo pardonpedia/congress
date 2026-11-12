@@ -661,22 +661,63 @@ body.resizing {
 
 .detail-party-state {
   padding: 0;
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   color: #444;
   border-bottom: none;
 }
 
 .detail-facts {
   margin-top: 0.2rem;
-  font-size: 0.8125rem;
+  font-size: 0.9rem;
   color: #666;
 }
 
 .detail-socials {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.28rem;
   margin-top: auto;
+}
+
+.detail-source-links {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex-shrink: 0;
+}
+
+.detail-source-links-spaced {
+  margin-left: 0.55rem;
+}
+
+.detail-source-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.35rem;
+  padding: 0 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #2c3e50;
+  text-decoration: none;
+  border: 1px solid #c5ced8;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.detail-source-link-compact {
+  font-size: 0.6875rem;
+}
+
+.detail-source-link:hover {
+  background: #eef2f6;
+}
+
+.detail-source-link:focus-visible {
+  outline: 2px solid #2c3e50;
+  outline-offset: 2px;
 }
 
 .detail-social {
@@ -728,7 +769,7 @@ body.resizing {
 }
 
 .detail-dc-office {
-  flex: 0 1 16rem;
+  flex: 0 1 18rem;
   margin-left: auto;
   padding-left: 1rem;
   border-left: 1px solid #eee;
@@ -748,6 +789,7 @@ body.resizing {
 
 .detail-dc-address {
   margin: 0;
+  font-size: 0.75rem;
 }
 
 .detail-dc-contact {
@@ -768,6 +810,11 @@ body.resizing {
 
 .detail-dc-contact dd {
   margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+}
+
+.detail-dc-contact a[href^="mailto:"] {
+  white-space: nowrap;
 }
 
 .detail-dc-contact a {

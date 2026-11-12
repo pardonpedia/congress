@@ -1240,12 +1240,7 @@
       links.push(createSocialLink('wikipedia', wikiUrl, `Wikipedia: ${wikipedia}`));
     }
 
-    if (links.length === 0) return null;
-
-    const row = document.createElement('div');
-    row.className = 'detail-socials';
-    for (const link of links) row.appendChild(link);
-    return row;
+    return links;
   }
 
   function formatPhoneHref(phone) {
@@ -1261,11 +1256,27 @@
     return [match[1], cityZip];
   }
 
+  function isLegislativeCorrespondent(title) {
+    return String(title || '')
+      .split(/[;,/]/)
+      .some(part => part.trim().toLowerCase() === 'legislative correspondent');
+  }
+
+  function memberContactEmail(member) {
+    const staff = staffByMemberId.get(member.id) || [];
+    const person = staff.find(s => {
+      const email = typeof s.email === 'string' ? s.email.trim() : '';
+      return email && !email.includes(';') && isLegislativeCorrespondent(s.title);
+    });
+    return person ? person.email.trim() : '';
+  }
+
   function renderDcOffice(member) {
     const address = typeof member.dc_office_address === 'string' ? member.dc_office_address.trim() : '';
     const phone = typeof member.dc_office_phone === 'string' ? member.dc_office_phone.trim() : '';
     const fax = typeof member.dc_office_fax === 'string' ? member.dc_office_fax.trim() : '';
-    if (!address && !phone && !fax) return null;
+    const email = memberContactEmail(member);
+    if (!address && !phone && !fax && !email) return null;
 
     const wrap = document.createElement('div');
     wrap.className = 'detail-dc-office';
@@ -1286,7 +1297,7 @@
       wrap.appendChild(addr);
     }
 
-    if (phone || fax) {
+    if (phone || email || fax) {
       const dl = document.createElement('dl');
       dl.className = 'detail-dc-contact';
 
@@ -1307,6 +1318,18 @@
         dl.appendChild(dd);
       }
 
+      if (email) {
+        const dt = document.createElement('dt');
+        dt.textContent = 'Email';
+        const dd = document.createElement('dd');
+        const a = document.createElement('a');
+        a.href = `mailto:${email}`;
+        a.textContent = email;
+        dd.appendChild(a);
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      }
+
       if (fax) {
         const dt = document.createElement('dt');
         dt.textContent = 'Fax';
@@ -1320,6 +1343,34 @@
     }
 
     return wrap;
+  }
+
+  const MEMBER_SOURCE_LINKS = [
+    { key: 'fec_url', label: 'FEC', compact: true },
+    { key: 'opensecrets_url', label: 'OpenSecrets', compact: true },
+    { key: 'govtrack_url', label: 'GovTrack' }
+  ];
+
+  function createMemberSourceLinks(member) {
+    const group = document.createElement('span');
+    group.className = 'detail-source-links';
+    let count = 0;
+
+    for (const source of MEMBER_SOURCE_LINKS) {
+      const url = typeof member[source.key] === 'string' ? member[source.key].trim() : '';
+      if (!url) continue;
+
+      const link = document.createElement('a');
+      link.className = 'detail-source-link' + (source.compact ? ' detail-source-link-compact' : '');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = source.label;
+      group.appendChild(link);
+      count++;
+    }
+
+    return count ? group : null;
   }
 
   function renderMemberDetail(member) {
@@ -1413,8 +1464,18 @@
       info.appendChild(facts);
     }
 
-    const socials = renderMemberSocials(member);
-    if (socials) info.appendChild(socials);
+    const socialLinks = renderMemberSocials(member);
+    const sourceLinks = createMemberSourceLinks(member);
+    if (socialLinks.length || sourceLinks) {
+      const socials = document.createElement('div');
+      socials.className = 'detail-socials';
+      for (const link of socialLinks) socials.appendChild(link);
+      if (sourceLinks) {
+        if (socialLinks.length) sourceLinks.classList.add('detail-source-links-spaced');
+        socials.appendChild(sourceLinks);
+      }
+      info.appendChild(socials);
+    }
 
     header.appendChild(info);
 
